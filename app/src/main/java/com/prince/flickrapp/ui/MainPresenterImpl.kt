@@ -36,7 +36,7 @@ class MainPresenterImpl(private val view: MainActivityContract.MainActivityView)
 
     private fun fetchRecentPhotos(): Disposable {
         return NetworkClient.getNetworkService()
-                .getPhotos("08d83079f3667d2d0bde61db91e3c4ce")
+                .getPhotos("API_TOKEN")
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ response ->

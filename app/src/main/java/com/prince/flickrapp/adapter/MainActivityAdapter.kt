@@ -2,7 +2,6 @@ package com.prince.flickrapp.adapter
 
 import android.content.Context
 import android.support.v7.widget.RecyclerView
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,7 +18,6 @@ class MainActivityAdapter(private val context: Context) : RecyclerView.Adapter<R
     private var photoList: MutableList<Any> = ArrayList()
     private var descriptionList: MutableList<Description> = ArrayList()
     private var imageList: MutableList<Photo> = ArrayList()
-    private var viewHolders: MutableList<RecyclerView.ViewHolder> = ArrayList()
     private var rowIndex = -1
     private val highlight = context.getDrawable(R.drawable.highlight)
 
@@ -40,24 +38,21 @@ class MainActivityAdapter(private val context: Context) : RecyclerView.Adapter<R
     override fun getItemCount(): Int = photoList.size
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val model = imageList[holder.adapterPosition]
-        val model1 = descriptionList[holder.adapterPosition]
-        viewHolders.add(holder.adapterPosition, holder)
         when (holder.itemViewType) {
             R.layout.layout_description -> {
                 holder as DescriptionHolder
-                holder.bindData(model1)
+                holder.bindData(descriptionList[rowIndex])
             }
             else -> {
                 holder as PhotoHolder
+                val model = photoList[holder.adapterPosition] as Photo
                 GlideApp.with(context)
                         .load(model.image)
                         .placeholder(R.drawable.placeholder)
                         .centerCrop()
                         .into(holder.image)
 
-
-                if (imageList[holder.adapterPosition].clicked) {
+                if (model.clicked) {
                     holder.image.background = highlight
                 } else {
                     holder.image.background = null
@@ -65,44 +60,37 @@ class MainActivityAdapter(private val context: Context) : RecyclerView.Adapter<R
 
 
                 holder.image.setOnClickListener {
-                    //                    if (descriptionPos != -1) {
-//                        photoList.removeAt(descriptionPos)
-//                        notifyItemRemoved(descriptionPos)
-//                        notifyItemRangeChanged(descriptionPos, photoList.size)
-//                    }
                     if (rowIndex != holder.adapterPosition && rowIndex != -1) {
-//                        val tempHolder = recyclerView.findViewHolderForAdapterPosition(rowIndex)
-//                        tempHolder.image.background = null
-                        val tempHolder = viewHolders[rowIndex] as PhotoHolder
-                        tempHolder.image.background = null
-                        imageList[rowIndex].clicked = false
+                        photoList.removeAt(descriptionPos)
+                        val temp = photoList[rowIndex] as Photo
+                        temp.clicked = false
+                        photoList[rowIndex] = temp
+                        notifyItemChanged(rowIndex)
+                        notifyItemRemoved(descriptionPos)
                     }
                     descriptionPos = when (holder.adapterPosition % 2) {
                         0 -> {
-                            if (holder.adapterPosition != photoList.size - 1) {
-                                holder.adapterPosition + 2
-                            } else {
+                            if (holder.adapterPosition == photoList.size - 1) {
                                 holder.adapterPosition + 1
+                            } else {
+                                holder.adapterPosition + 2
                             }
                         }
                         else -> holder.adapterPosition + 1
                     }
-
                     rowIndex = holder.adapterPosition
-                    imageList[holder.adapterPosition].clicked = !imageList[holder.adapterPosition].clicked
-                    if (imageList[rowIndex].clicked) {
+                    model.clicked = !model.clicked
+                    photoList[rowIndex] = model
+                    if (model.clicked) {
                         holder.image.background = highlight
-//                        photoList.removeAt(descriptionPos)
-//                        notifyItemRemoved(descriptionPos)
-//                        notifyItemRangeChanged(descriptionPos, photoList.size)
-//                        descriptionPos = -1
+                        photoList.add(descriptionPos, descriptionList[rowIndex])
+                        recyclerView.scrollToPosition(descriptionPos)
                     } else {
                         holder.image.background = null
-//                        photoList.add(descriptionPos, model1)
-//                        notifyItemInserted(descriptionPos)
-//                        notifyItemRangeChanged(descriptionPos, photoList.size)
+                        photoList.removeAt(descriptionPos)
+                        rowIndex = -1
                     }
-//                    notifyDataSetChanged()
+                    notifyDataSetChanged()
                 }
             }
         }
@@ -126,15 +114,6 @@ class MainActivityAdapter(private val context: Context) : RecyclerView.Adapter<R
 
     inner class PhotoHolder(v: View) : RecyclerView.ViewHolder(v) {
         val image = v.iv_photo!!
-        private lateinit var photo: Photo
-        fun bindPhoto(photo: Photo) {
-            this.photo = photo
-            GlideApp.with(context)
-                    .load(photo.image)
-                    .placeholder(R.drawable.placeholder)
-                    .centerCrop()
-                    .into(image)
-        }
     }
 
 
@@ -144,9 +123,10 @@ class MainActivityAdapter(private val context: Context) : RecyclerView.Adapter<R
         val desc = v.tv_desc!!
 
         fun bindData(description: Description) {
-            name.text = description.title
+            name.text = if (description.title.isEmpty()) "No Title" else description.title
+            name.paint.isUnderlineText = true
             dimen.text = """${description.width}*${description.height}"""
-            desc.text = description.description
+            desc.text = if (description.description.isEmpty()) "No Description" else description.description
         }
     }
 
