@@ -21,7 +21,7 @@ class MainPresenterImpl(private val view: MainActivityContract.MainActivityView)
     }
 
     override fun subscribe() {
-        getRecentPhotos();
+        getRecentPhotos()
     }
 
     override fun unSubscribe() {
@@ -36,7 +36,7 @@ class MainPresenterImpl(private val view: MainActivityContract.MainActivityView)
 
     private fun fetchRecentPhotos(): Disposable {
         return NetworkClient.getNetworkService()
-                .getPhotos("API_TOKEN")
+                .getPhotos("08d83079f3667d2d0bde61db91e3c4ce")
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe({ response ->
