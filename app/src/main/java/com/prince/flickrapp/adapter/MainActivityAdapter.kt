@@ -7,6 +7,7 @@ import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.prince.flickrapp.GlideApp
 import com.prince.flickrapp.R
 import com.prince.flickrapp.model.Description
@@ -74,6 +75,8 @@ class MainActivityAdapter(private val context: Context) : RecyclerView.Adapter<R
         fun bindData(model: Photo) {
             GlideApp.with(context)
                     .load(model.image)
+                    .dontAnimate()
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
                     .placeholder(R.drawable.placeholder)
                     .centerCrop()
                     .into(image)
@@ -91,7 +94,6 @@ class MainActivityAdapter(private val context: Context) : RecyclerView.Adapter<R
                     val temp = photoList[rowIndex] as Photo
                     temp.clicked = false
                     photoList[rowIndex] = temp
-                    notifyItemChanged(rowIndex)
                     notifyItemRemoved(descriptionPos)
                 }
                 descriptionPos = when (adapterPosition % 2) {
@@ -110,11 +112,10 @@ class MainActivityAdapter(private val context: Context) : RecyclerView.Adapter<R
                 model.clicked = !model.clicked
                 photoList[rowIndex] = model
                 if (model.clicked) {
-                    image.background = highlight
                     photoList.add(descriptionPos, descriptionList[rowIndex])
                     recyclerView.scrollToPosition(descriptionPos)
                 } else {
-                    image.background = null
+                    descriptionPos = if (descriptionPos == photoList.size) descriptionPos - 1 else descriptionPos
                     photoList.removeAt(descriptionPos)
                     rowIndex = -1
                 }
